@@ -1,0 +1,17 @@
+{
+  "domain": "deltatru",
+  "name": "DeltaTru",
+  "after_dependencies": ["esphome", "lovelace"],
+  "codeowners": ["@ryxx-zz"],
+  "config_flow": true,
+  "dependencies": ["frontend", "persistent_notification"],
+  "documentation": "https://github.com/ryxx-zz/deltatru-homeassistant",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/ryxx-zz/deltatru-homeassistant/issues",
+  "requirements": [],
+  "version": "0.1.0",
+  "zeroconf": [
+    {"type": "_esphomelib._tcp.local.", "properties": {"project_name": "elmer.hvac-monitor*"}}
+  ]
+}

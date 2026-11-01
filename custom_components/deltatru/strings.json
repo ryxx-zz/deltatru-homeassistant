@@ -1,0 +1,104 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Sign in to DeltaTru",
+        "description": "Use the same email and password as the DeltaTru web dashboard. {found} DeltaTru monitor(s) were found in ESPHome and will be linked automatically.",
+        "data": {
+          "email": "Email",
+          "password": "Password",
+          "anon_key": "Cloud API key (public anon key)",
+          "supabase_url": "Cloud URL"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "DeltaTru monitor found",
+        "description": "{name} is a DeltaTru HVAC monitor. Sign in to DeltaTru to add alerts, health and a dashboard?"
+      },
+      "reauth_confirm": {
+        "title": "Sign in again",
+        "description": "Your DeltaTru session expired.",
+        "data": {
+          "email": "Email",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Wrong email or password.",
+      "cannot_connect": "Could not reach the DeltaTru cloud."
+    },
+    "abort": {
+      "already_configured": "This DeltaTru account is already set up.",
+      "reauth_successful": "Signed in again."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "DeltaTru options",
+        "description": "Monitors found: {monitors}. Monitors are matched to systems automatically (firmware System ID, or the only system); override here if needed.",
+        "data": {
+          "dashboard": "Show the DeltaTru dashboard in the sidebar",
+          "notify_problem": "Notify when a monitor reports a problem"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "alert_not_running": {
+        "name": "Not running alert"
+      },
+      "alert_airflow": {
+        "name": "Airflow alert"
+      },
+      "alert_capacity": {
+        "name": "Capacity alert"
+      },
+      "alert_outdoor_side": {
+        "name": "Outdoor side alert"
+      },
+      "alert_weak_compressor": {
+        "name": "Weak compressor alert"
+      },
+      "alert_wrong_mode": {
+        "name": "Wrong mode alert"
+      },
+      "alert_aux_heat": {
+        "name": "Aux heat alert"
+      },
+      "alert_short_cycling": {
+        "name": "Short cycling alert"
+      },
+      "alert_monitor_fault": {
+        "name": "Monitor fault alert"
+      },
+      "alert_safety": {
+        "name": "Safety alert"
+      },
+      "problem": {
+        "name": "Active alert"
+      }
+    },
+    "sensor": {
+      "health": {
+        "name": "System health",
+        "state": {
+          "ok": "OK",
+          "attention": "Needs attention",
+          "problem": "Problem",
+          "offline": "Offline",
+          "setup": "Setting up"
+        }
+      },
+      "latest_alert": {
+        "name": "Latest alert"
+      },
+      "last_upload": {
+        "name": "Last upload"
+      }
+    }
+  }
+}
