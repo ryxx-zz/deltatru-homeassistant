@@ -121,7 +121,7 @@ async def test_options_flow_maps_device(hass, mock_cloud):
     r = await hass.config_entries.options.async_init(entry.entry_id)
     assert r["step_id"] == "init"
     r = await hass.config_entries.options.async_configure(
-        r["flow_id"], {"dashboard": False, "notify_problem": True, dev_id: SYS})
+        r["flow_id"], {"dashboard": False, "notify_problem": True, "Monitor: ahu-1": SYS})
     await hass.async_block_till_done()
     assert entry.options["device_map"] == {dev_id: SYS}
     assert "deltatru" not in hass.data[LOVELACE_DATA].dashboards

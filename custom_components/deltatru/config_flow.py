@@ -27,7 +27,7 @@ from .const import (
     DEFAULT_SUPABASE_URL,
     DOMAIN,
 )
-from .discovery import find_monitors
+from .discovery import find_esphome_devices, find_monitors
 
 UNASSIGNED = "auto"
 
@@ -130,13 +130,22 @@ class DeltaTruOptionsFlow(OptionsFlowWithReload):
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         entry = self.config_entry
         systems = {sid: s.name for sid, s in (entry.runtime_data.data or {}).items()} if hasattr(entry, "runtime_data") else {}
-        monitors = find_monitors(self.hass)
         current = entry.options.get(CONF_DEVICE_MAP, {})
+        monitors = find_monitors(self.hass, set(current))
+        detected = {m.device_id for m in monitors}
+        devices = find_esphome_devices(self.hass)
+        # Field key = the label HA shows, so use the device name (+ hint), mapped back to the device id.
+        keys: dict[str, str] = {}
+        for dev_id, dev_name in devices:
+            key = f"Monitor: {dev_name}" if dev_id in detected else f"ESPHome device: {dev_name}"
+            while key in keys:
+                key += " "
+            keys[key] = dev_id
         if user_input is not None:
             device_map = {
-                m.device_id: user_input[m.device_id]
-                for m in monitors
-                if user_input.get(m.device_id, UNASSIGNED) != UNASSIGNED
+                dev_id: user_input[key]
+                for key, dev_id in keys.items()
+                if user_input.get(key, UNASSIGNED) != UNASSIGNED
             }
             return self.async_create_entry(data={
                 CONF_DASHBOARD: user_input[CONF_DASHBOARD],
@@ -150,10 +159,11 @@ class DeltaTruOptionsFlow(OptionsFlowWithReload):
             vol.Required(CONF_DASHBOARD, default=entry.options.get(CONF_DASHBOARD, True)): bool,
             vol.Required(CONF_NOTIFY, default=entry.options.get(CONF_NOTIFY, True)): bool,
         }
-        for m in monitors:
-            fields[vol.Optional(m.device_id, default=current.get(m.device_id, UNASSIGNED),
-                                description={"suggested_value": current.get(m.device_id, UNASSIGNED)})] = (
+        for key, dev_id in keys.items():
+            fields[vol.Optional(key, default=current.get(dev_id, UNASSIGNED))] = (
                 selector.SelectSelector(selector.SelectSelectorConfig(options=choices, mode=selector.SelectSelectorMode.DROPDOWN))
             )
         names = ", ".join(f"{m.name} ({m.role})" for m in monitors) or "none"
+        if others := [n for d, n in devices if d not in detected]:
+            names += "; other ESPHome devices (map manually): " + ", ".join(others)
         return self.async_show_form(step_id="init", data_schema=vol.Schema(fields), description_placeholders={"monitors": names})

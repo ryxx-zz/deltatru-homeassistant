@@ -38,7 +38,7 @@
     "step": {
       "init": {
         "title": "DeltaTru options",
-        "description": "Monitors found: {monitors}. Monitors are matched to systems automatically (firmware System ID, or the only system); override here if needed.",
+        "description": "Monitors found: {monitors}. Monitors are matched to systems automatically (firmware System ID, or the only system). Pick a system for any ESPHome device below to map it manually.",
         "data": {
           "dashboard": "Show the DeltaTru dashboard in the sidebar",
           "notify_problem": "Notify when a monitor reports a problem"

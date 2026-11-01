@@ -68,7 +68,7 @@ def async_link_devices(hass: HomeAssistant, entry: DeltaTruConfigEntry) -> None:
     """Hang each ESPHome monitor under its 'DeltaTru <system>' device."""
     data = entry.runtime_data.data or {}
     dev_reg = dr.async_get(hass)
-    groups = assign(find_monitors(hass), list(data), entry.options.get(CONF_DEVICE_MAP, {}))
+    groups = assign(find_monitors(hass, set(entry.options.get(CONF_DEVICE_MAP, {}))), list(data), entry.options.get(CONF_DEVICE_MAP, {}))
     for sid, monitors in groups.items():
         parent = dev_reg.async_get_or_create(config_entry_id=entry.entry_id, **system_device_info(data[sid]))
         for mon in monitors:

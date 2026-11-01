@@ -34,7 +34,7 @@ def build_dashboard(hass: HomeAssistant) -> dict[str, Any]:
     views: list[dict[str, Any]] = []
     for entry in entries:
         data = entry.runtime_data.data or {}
-        groups = assign(find_monitors(hass), list(data), entry.options.get("device_map", {}))
+        groups = assign(find_monitors(hass, set(entry.options.get("device_map", {}))), list(data), entry.options.get("device_map", {}))
         for sid, system in data.items():
             views.append(_view(ent_reg, sid, system.name, groups.get(sid, [])))
     if not views:
