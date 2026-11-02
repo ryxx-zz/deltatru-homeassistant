@@ -10,7 +10,7 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/ryxx-zz/deltatru-homeassistant/issues",
   "requirements": [],
-  "version": "0.1.1",
+  "version": "0.2.0",
   "zeroconf": [
     {"type": "_esphomelib._tcp.local.", "properties": {"project_name": "elmer.hvac-monitor*"}}
   ]

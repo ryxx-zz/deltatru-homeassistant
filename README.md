@@ -24,6 +24,10 @@ Data is polled every 5 minutes with your own login; the cloud's row-level securi
 - When a monitor's **Problem** sensor turns on you get a persistent notification showing its Status text. It clears when the problem clears.
 - New monitors are discovered over zeroconf, which prompts you to set up DeltaTru.
 
+## Subscription
+
+The ESPHome monitor entities are local and always free. The cloud features (alert sensors, system health, device grouping and the DeltaTru dashboard) need an active DeltaTru subscription. The server enforces this: without one, the integration stays loaded, shows a single *"DeltaTru cloud features need an active subscription"* notice under Settings → Repairs, and puts the same message on the dashboard. The cloud features come back on the next poll after you reactivate.
+
 ## Install (HACS)
 
 1. In HACS, open ⋮ → **Custom repositories**, add `https://github.com/ryxx-zz/deltatru-homeassistant` and choose category **Integration**.

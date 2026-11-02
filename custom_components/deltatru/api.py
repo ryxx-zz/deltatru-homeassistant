@@ -64,15 +64,16 @@ class DeltaTruClient:
             raise DeltaTruAuthError("no refresh token")
         await self._auth("refresh_token", {"refresh_token": self.refresh_token})
 
-    async def _get(self, table: str, params: dict[str, str]) -> list[dict[str, Any]]:
+    async def _request(self, method: str, path: str, **kw: Any) -> Any:
         async with self._lock:
             if self._access_token is None:
                 await self.async_refresh()
         for attempt in (0, 1):
             try:
-                resp = await self._session.get(
-                    f"{self._url}/rest/v1/{table}",
-                    params=params,
+                resp = await self._session.request(
+                    method,
+                    f"{self._url}/rest/v1/{path}",
+                    **kw,
                     headers={
                         "apikey": self._key,
                         "Authorization": f"Bearer {self._access_token}",
@@ -84,27 +85,15 @@ class DeltaTruClient:
                         await self.async_refresh()
                     continue
                 if resp.status >= 300:
-                    raise DeltaTruError(f"{table} HTTP {resp.status}")
+                    raise DeltaTruError(f"{path} HTTP {resp.status}")
                 return await resp.json(content_type=None)
             except (aiohttp.ClientError, TimeoutError) as err:
                 raise DeltaTruError(str(err)) from err
         raise DeltaTruAuthError("session expired")
 
-    async def async_systems(self) -> list[dict[str, Any]]:
-        return await self._get("systems", {"select": "id,name,status", "order": "name"})
+    async def async_snapshot(self) -> dict[str, Any]:
+        """Systems, devices and active alerts in one call, gated server-side on the subscription.
 
-    async def async_devices(self) -> list[dict[str, Any]]:
-        return await self._get(
-            "devices",
-            {"select": "device_id,role,system_id,last_seen_at,last_rssi,fw_version,status"},
-        )
-
-    async def async_active_alerts(self) -> list[dict[str, Any]]:
-        return await self._get(
-            "alerts",
-            {
-                "select": "id,system_id,rule_id,family,severity,status,title,first_seen,last_seen",
-                "status": "in.(open,acknowledged)",
-                "order": "last_seen.desc",
-            },
-        )
+        Returns {"subscription_active": false} when the account has no active subscription.
+        """
+        return await self._request("POST", "rpc/ha_snapshot", json={})

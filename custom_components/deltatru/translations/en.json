@@ -100,5 +100,11 @@
         "name": "Last upload"
       }
     }
+  },
+  "issues": {
+    "subscription_required": {
+      "title": "DeltaTru cloud features need an active subscription",
+      "description": "Your DeltaTru account doesn't have an active subscription, so cloud alerts, system health, device grouping and the DeltaTru dashboard are paused. Your ESPHome monitor entities keep working locally. Everything resumes automatically within a few minutes of reactivating at deltatru.com."
+    }
   }
 }

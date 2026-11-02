@@ -134,7 +134,7 @@ async def test_reauth_on_auth_failure(hass, mock_cloud):
     async def boom(self):
         raise DeltaTruAuthError("expired")
 
-    with patch("custom_components.deltatru.api.DeltaTruClient.async_systems", boom):
+    with patch("custom_components.deltatru.api.DeltaTruClient.async_snapshot", boom):
         await async_setup_component(hass, "lovelace", {})
         entry = MockConfigEntry(domain=DOMAIN, unique_id="user-1", data={
             "email": "a@b.c", "supabase_url": "u", "anon_key": "k", "refresh_token": "rt"})
@@ -146,3 +146,23 @@ async def test_reauth_on_auth_failure(hass, mock_cloud):
     assert flows and flows[0]["context"]["source"] == "reauth"
     r = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {"email": "a@b.c", "password": "pw"})
     assert r["reason"] == "reauth_successful"
+
+
+async def test_subscription_inactive_is_graceful(hass, mock_cloud):
+    from homeassistant.helpers import issue_registry as ir
+    dev_id = add_esphome_ahu(hass)
+    mock_cloud["active"] = False
+    entry = await setup(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.deltatru_kitchen_system_health") is None
+    issue = ir.async_get(hass).async_get_issue(DOMAIN, f"subscription_{entry.entry_id}")
+    assert issue and issue.translation_key == "subscription_required"
+    cfg = build_dashboard(hass)
+    assert "need an active subscription" in cfg["views"][0]["cards"][0]["content"]
+    assert dr.async_get(hass).async_get(dev_id).via_device_id is None
+    # reactivated -> entities appear and the notice clears
+    mock_cloud["active"] = True
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL + timedelta(seconds=1))
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.deltatru_kitchen_system_health").state == "ok"
+    assert ir.async_get(hass).async_get_issue(DOMAIN, f"subscription_{entry.entry_id}") is None

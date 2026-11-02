@@ -20,6 +20,11 @@ from .discovery import Monitor, assign, find_monitors
 
 AHU_TILES = ("hvac_mode", "status", "problem", "return_air", "supply_air", "blower_amps")
 COND_TILES = ("outdoor_air", "compressor_amps", "compressor_running")
+SUBSCRIPTION_MSG = (
+    "## DeltaTru cloud features need an active subscription\n"
+    "Your ESPHome monitor entities keep working locally. Alerts, system health and this dashboard "
+    "come back automatically once your subscription is active at [deltatru.com](https://deltatru.com)."
+)
 HISTORY = ("delta_t", "return_air", "supply_air", "blower_amps", "compressor_amps", "outdoor_air")
 
 
@@ -33,6 +38,9 @@ def build_dashboard(hass: HomeAssistant) -> dict[str, Any]:
     entries = hass.config_entries.async_loaded_entries(DOMAIN)
     views: list[dict[str, Any]] = []
     for entry in entries:
+        if not entry.runtime_data.subscription_active:
+            views.append({"title": "DeltaTru", "cards": [{"type": "markdown", "content": SUBSCRIPTION_MSG}]})
+            continue
         data = entry.runtime_data.data or {}
         groups = assign(find_monitors(hass, set(entry.options.get("device_map", {}))), list(data), entry.options.get("device_map", {}))
         for sid, system in data.items():

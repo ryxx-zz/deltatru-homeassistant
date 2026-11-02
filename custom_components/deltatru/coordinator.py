@@ -10,6 +10,7 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -78,13 +79,24 @@ class DeltaTruCoordinator(DataUpdateCoordinator[dict[str, SystemState]]):
     def __init__(self, hass: HomeAssistant, entry: DeltaTruConfigEntry, client: DeltaTruClient) -> None:
         super().__init__(hass, _LOGGER, config_entry=entry, name=DOMAIN, update_interval=SCAN_INTERVAL)
         self.client = client
+        self.subscription_active = True
+
+    def _sync_issue(self) -> None:
+        """Show a friendly repair notice instead of errors when the subscription lapses."""
+        issue_id = f"subscription_{self.config_entry.entry_id}"
+        if self.subscription_active:
+            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+        else:
+            ir.async_create_issue(
+                self.hass, DOMAIN, issue_id, is_fixable=False, is_persistent=False,
+                severity=ir.IssueSeverity.WARNING, translation_key="subscription_required",
+                learn_more_url="https://deltatru.com",
+            )
 
     async def _async_update_data(self) -> dict[str, SystemState]:
         old_token = self.client.refresh_token
         try:
-            systems = await self.client.async_systems()
-            devices = await self.client.async_devices()
-            alerts = await self.client.async_active_alerts()
+            snap = await self.client.async_snapshot()
         except DeltaTruAuthError as err:
             raise ConfigEntryAuthFailed(str(err)) from err
         except DeltaTruError as err:
@@ -96,6 +108,11 @@ class DeltaTruCoordinator(DataUpdateCoordinator[dict[str, SystemState]]):
                     self.config_entry,
                     data={**self.config_entry.data, CONF_REFRESH_TOKEN: self.client.refresh_token},
                 )
+        self.subscription_active = bool(snap.get("subscription_active"))
+        self._sync_issue()
+        if not self.subscription_active:
+            return {}
+        systems, devices, alerts = snap.get("systems") or [], snap.get("devices") or [], snap.get("alerts") or []
         out = {s["id"]: SystemState(s["id"], s.get("name") or "HVAC", s.get("status") or "") for s in systems}
         for d in devices:
             if d.get("system_id") in out:

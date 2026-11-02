@@ -37,16 +37,11 @@ def mock_cloud():
             raise DeltaTruAuthError("bad")
         self.refresh_token, self.user_id = "rt", "user-1"
 
-    async def systems(self):
-        return state["data"]["systems"]
-
-    async def devices(self):
-        return state["data"]["devices"]
-
-    async def alerts(self):
-        return state["data"]["alerts"]
+    async def snapshot(self):
+        if not state.get("active", True):
+            return {"subscription_active": False}
+        return {"subscription_active": True, **state["data"]}
 
     base = "custom_components.deltatru.api.DeltaTruClient."
-    with patch(base + "async_sign_in", sign_in), patch(base + "async_systems", systems), \
-            patch(base + "async_devices", devices), patch(base + "async_active_alerts", alerts):
+    with patch(base + "async_sign_in", sign_in), patch(base + "async_snapshot", snapshot):
         yield state
