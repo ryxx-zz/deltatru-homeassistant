@@ -54,6 +54,7 @@ async def test_setup_entities_and_link(hass, mock_cloud):
     assert hass.states.get("sensor.deltatru_kitchen_latest_alert").state == "No active alerts"
     assert hass.states.get("binary_sensor.deltatru_kitchen_airflow_alert").state == "off"
     assert hass.states.get("sensor.deltatru_kitchen_last_upload") is not None
+    assert hass.states.get("binary_sensor.deltatru_kitchen_connected") is not None
     parent = dr.async_get(hass).async_get_device_by_identifier((DOMAIN, SYS), entry.entry_id)
     assert parent.name == "DeltaTru Kitchen"
     assert dr.async_get(hass).async_get(dev_id).via_device_id == parent.id

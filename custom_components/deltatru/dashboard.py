@@ -62,7 +62,7 @@ def _pick(monitors: list[Monitor], role: str, keys: tuple[str, ...]) -> list[str
 def _view(ent_reg: er.EntityRegistry, sid: str, name: str, monitors: list[Monitor]) -> dict[str, Any]:
     health = _own(ent_reg, "sensor", sid, "health")
     latest = _own(ent_reg, "sensor", sid, "latest_alert")
-    upload = _own(ent_reg, "sensor", sid, "last_upload")
+    connected = _own(ent_reg, "binary_sensor", sid, "connected")
     problem = _own(ent_reg, "binary_sensor", sid, "problem")
     cards: list[dict[str, Any]] = []
     if problem and latest:
@@ -74,7 +74,7 @@ def _view(ent_reg: er.EntityRegistry, sid: str, name: str, monitors: list[Monito
                                 f"Severity: {{{{ state_attr('{latest}', 'severity') }}}} · "
                                 f"since {{{{ state_attr('{latest}', 'first_seen') }}}}"},
         })
-    tiles = [e for e in (health, upload) if e]
+    tiles = [e for e in (health, connected) if e]
     tiles += _pick(monitors, "ahu", AHU_TILES) + _pick(monitors, "cond", COND_TILES)
     if tiles:
         cards.append({"type": "grid", "columns": 3, "square": False,

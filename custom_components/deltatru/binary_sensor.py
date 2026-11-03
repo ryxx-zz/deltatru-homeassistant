@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass, BinarySensorEntity
+from datetime import timedelta
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from homeassistant.util import dt as dt_util
 
 from .const import ALERT_FAMILIES
 from .coordinator import DeltaTruConfigEntry
 from .entity import DeltaTruEntity
+
+CONNECTED_WITHIN = timedelta(minutes=15)
 
 
 async def async_setup_entry(
@@ -23,6 +29,7 @@ async def async_setup_entry(
         async_add_entities(
             [AlertFamilySensor(coordinator, sid, fam) for sid in new for fam in ALERT_FAMILIES]
             + [AnyAlertSensor(coordinator, sid) for sid in new]
+            + [ConnectedSensor(coordinator, sid) for sid in new]
         )
 
     _add()
@@ -63,3 +70,18 @@ class AnyAlertSensor(DeltaTruEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         return bool(self.system and self.system.alerts)
+
+
+class ConnectedSensor(DeltaTruEntity, BinarySensorEntity):
+    """On while the last cloud upload is within CONNECTED_WITHIN."""
+
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    _attr_translation_key = "connected"
+
+    def __init__(self, coordinator, system_id: str) -> None:
+        super().__init__(coordinator, system_id, "connected")
+
+    @property
+    def is_on(self) -> bool:
+        last = self.system.last_upload if self.system else None
+        return last is not None and dt_util.utcnow() - last <= CONNECTED_WITHIN

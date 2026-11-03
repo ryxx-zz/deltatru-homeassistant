@@ -80,6 +80,9 @@
       },
       "problem": {
         "name": "Active alert"
+      },
+      "connected": {
+        "name": "Connected"
       }
     },
     "sensor": {
